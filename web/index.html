@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Convert ETS KNX projects into editable JSON configuration.">
+  <title>KNX Project to JSON</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" data-action="reset" data-i18n-aria-label="brand.home">
+      <span class="brand-mark" aria-hidden="true">K</span>
+      <span><strong data-i18n="brand.title">KNX Project</strong><small data-i18n="brand.subtitle">to JSON</small></span>
+    </a>
+    <div class="header-tools">
+      <label class="language-picker"><span class="sr-only" data-i18n="language.label">Interface language</span><select id="ui-language" data-i18n-aria-label="language.label"><option value="en">English</option><option value="zh-CN">简体中文</option><option value="zh-TW">繁體中文</option></select></label>
+      <div class="header-status" id="header-status"><span class="status-dot"></span><span data-i18n="status.checking">Checking backend</span></div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="intro-row">
+      <div>
+        <p class="eyebrow" data-i18n="hero.eyebrow">LOCAL CONFIGURATION WORKBENCH</p>
+        <h1 data-i18n="hero.title">Turn an ETS project into a configuration you can trust.</h1>
+        <p class="lede" data-i18n="hero.description">Parse the project with the Python backend, review the generated communication objects, and leave with a clean JSON file ready for your application.</p>
+      </div>
+      <div class="intro-note">
+        <span class="note-index">01</span>
+        <span><span data-i18n="hero.note.first">Five deliberate steps.</span><br><span data-i18n="hero.note.second">One portable result.</span></span>
+      </div>
+    </section>
+
+    <nav class="stepper" aria-label="Conversion steps" data-i18n-aria-label="steps.label">
+      <button class="step active" data-step="setup"><span>01</span><b data-i18n="steps.setup">Setup</b><small data-i18n="steps.setupDetail">Backend check</small></button>
+      <button class="step" data-step="import"><span>02</span><b data-i18n="steps.import">Import</b><small data-i18n="steps.importDetail">Choose project</small></button>
+      <button class="step" data-step="convert"><span>03</span><b data-i18n="steps.convert">Convert</b><small data-i18n="steps.convertDetail">Parse and map</small></button>
+      <button class="step" data-step="review"><span>04</span><b data-i18n="steps.review">Review</b><small data-i18n="steps.reviewDetail">Edit JSON</small></button>
+      <button class="step" data-step="export"><span>05</span><b data-i18n="steps.export">Export</b><small data-i18n="steps.exportDetail">Save files</small></button>
+    </nav>
+
+    <div id="global-alert" class="alert hidden" role="alert"></div>
+
+    <section class="panel active" data-panel="setup">
+      <div class="panel-heading">
+        <div>
+          <p class="step-kicker" data-i18n="setup.kicker">STEP 01 / ENVIRONMENT</p>
+          <h2 data-i18n="setup.title">Make sure the parser is ready.</h2>
+          <p data-i18n="setup.description">Conversion happens locally through the Python service. Your browser is the control surface, not the parser.</p>
+        </div>
+        <div class="panel-number">01</div>
+      </div>
+      <div class="setup-grid">
+        <div class="setup-card setup-card-main">
+          <div class="card-label" data-i18n="setup.backendStatus">Backend status</div>
+          <div class="health-line"><span class="health-orb" id="health-orb"></span><strong id="health-title" data-i18n="status.checkingConnection">Checking connection</strong></div>
+          <p id="health-detail" data-i18n="status.contacting">Contacting the local conversion service...</p>
+          <button class="button button-primary" id="health-check"><span aria-hidden="true">&#8635;</span> <span data-i18n="actions.checkAgain">Check again</span></button>
+        </div>
+        <div class="setup-card">
+          <div class="card-label" data-i18n="setup.environment">Environment</div>
+          <dl class="facts">
+            <div><dt data-i18n="environment.python">Python</dt><dd id="python-version" data-i18n="status.waiting">Waiting</dd></div>
+            <div><dt data-i18n="environment.parser">Parser</dt><dd id="parser-version" data-i18n="status.waiting">Waiting</dd></div>
+            <div><dt data-i18n="environment.uploadLimit">Upload limit</dt><dd>50 MB</dd></div>
+          </dl>
+        </div>
+        <div class="setup-card install-card">
+          <div class="card-label" data-i18n="setup.firstTime">First-time setup</div>
+          <p data-i18n="setup.installDescription">From the project folder, install the parser and start the local service.</p>
+          <code>python -m pip install -r requirements.txt<br>python web_app.py</code>
+        </div>
+      </div>
+      <div class="panel-actions"><button class="button button-primary" data-next="import"><span data-i18n="actions.continueImport">Continue to import</span> <span aria-hidden="true">&#8594;</span></button></div>
+    </section>
+
+    <section class="panel" data-panel="import">
+      <div class="panel-heading">
+        <div>
+          <p class="step-kicker" data-i18n="import.kicker">STEP 02 / PROJECT INPUT</p>
+          <h2 data-i18n="import.title">Bring in your ETS project.</h2>
+          <p><span data-i18n="import.descriptionBefore">Select a local</span> <code>.knxproj</code> <span data-i18n="import.descriptionAfter">file. It will be held in a temporary backend directory only for this conversion.</span></p>
+        </div>
+        <div class="panel-number">02</div>
+      </div>
+      <form id="import-form">
+        <label class="dropzone" id="dropzone" for="project-file">
+          <input id="project-file" type="file" accept=".knxproj,application/octet-stream">
+          <span class="drop-icon" aria-hidden="true">+</span>
+          <strong data-i18n="import.dropTitle">Drop an ETS project here</strong>
+          <span><span data-i18n="import.dropBefore">or choose a</span> <code>.knxproj</code> <span data-i18n="import.dropAfter">file from your computer</span></span>
+          <span class="file-meta hidden" id="file-meta"></span>
+        </label>
+        <div class="options-grid">
+          <label class="field">
+            <span><span data-i18n="import.password">Password</span> <em data-i18n="common.optional">optional</em></span>
+            <span class="input-with-action"><input id="project-password" type="password" autocomplete="off" data-i18n-placeholder="import.passwordPlaceholder"><button type="button" class="icon-button" id="toggle-password" data-i18n-aria-label="import.showPassword">&#9673;</button></span>
+          </label>
+          <label class="field">
+            <span><span data-i18n="import.projectLanguage">Project language</span> <em data-i18n="common.optional">optional</em></span>
+            <select id="project-language"><option value="">Use project default</option><option value="en-US">English (US)</option><option value="de-DE">German (Germany)</option><option value="fr-FR">French (France)</option></select>
+          </label>
+        </div>
+        <div class="privacy-line"><span aria-hidden="true">&#9673;</span> <span data-i18n="import.privacy">Files and passwords stay within this local web service. Passwords are never displayed in results or logs.</span></div>
+        <div class="panel-actions split"><button type="button" class="button button-quiet" data-prev="setup" data-i18n="actions.back">Back</button><button class="button button-primary" type="submit" id="convert-button" disabled><span data-i18n="actions.startConversion">Start conversion</span> <span aria-hidden="true">&#8594;</span></button></div>
+      </form>
+    </section>
+
+    <section class="panel" data-panel="convert">
+      <div class="panel-heading">
+        <div>
+          <p class="step-kicker" data-i18n="convert.kicker">STEP 03 / CONVERSION</p>
+          <h2 data-i18n="convert.title">Building your configuration.</h2>
+          <p id="conversion-caption" data-i18n="convert.description">The parser is working through the project in a temporary workspace.</p>
+        </div>
+        <div class="panel-number">03</div>
+      </div>
+      <div class="progress-shell">
+        <div class="progress-track"><span id="progress-bar"></span></div>
+        <div class="progress-percent" id="progress-percent">0%</div>
+      </div>
+      <ol class="conversion-stages" id="conversion-stages">
+        <li data-stage="0"><span>01</span><b data-i18n="convert.stageUpload">Uploading project</b><small data-i18n="convert.waiting">Waiting</small></li>
+        <li data-stage="1"><span>02</span><b data-i18n="convert.stageParse">Parsing ETS data</b><small data-i18n="convert.waiting">Waiting</small></li>
+        <li data-stage="2"><span>03</span><b data-i18n="convert.stageWrite">Writing parser output</b><small data-i18n="convert.waiting">Waiting</small></li>
+        <li data-stage="3"><span>04</span><b data-i18n="convert.stageMap">Mapping communication objects</b><small data-i18n="convert.waiting">Waiting</small></li>
+        <li data-stage="4"><span>05</span><b data-i18n="convert.stageValidate">Validating configuration</b><small data-i18n="convert.waiting">Waiting</small></li>
+      </ol>
+    </section>
+
+    <section class="panel" data-panel="review">
+      <div class="panel-heading review-heading">
+        <div>
+          <p class="step-kicker" data-i18n="review.kicker">STEP 04 / REVIEW</p>
+          <h2 data-i18n="review.title">Shape the JSON before it leaves.</h2>
+          <p data-i18n="review.description">Edit the generated application configuration directly. The validator checks the same contract used by the backend.</p>
+        </div>
+        <div class="review-actions"><button class="button button-quiet" id="format-json" data-i18n="actions.format">Format</button><button class="button button-quiet" id="reset-json" data-i18n="actions.reset">Reset</button></div>
+      </div>
+      <div class="summary-grid" id="summary-grid"></div>
+      <div class="editor-toolbar"><label for="json-search" data-i18n="review.find">Find in JSON</label><input id="json-search" type="search" data-i18n-placeholder="review.searchPlaceholder"><span id="validation-status" class="validation pending" data-i18n="validation.notValidated">Not validated</span></div>
+      <div class="editor-wrap">
+        <div class="line-numbers" id="line-numbers" aria-hidden="true">1</div>
+        <div class="code-surface">
+          <pre class="highlight" id="highlight" aria-hidden="true"></pre>
+          <textarea id="json-editor" spellcheck="false" data-i18n-aria-label="review.editorLabel"></textarea>
+        </div>
+      </div>
+      <div id="validation-message" class="editor-message" role="status" data-i18n="validation.editPrompt">Edit the JSON, then validate before exporting.</div>
+      <details class="raw-output"><summary data-i18n="review.rawOutput">Inspect raw parser output</summary><pre id="raw-preview"></pre></details>
+      <div class="panel-actions split"><button class="button button-quiet" data-prev="import" data-i18n="actions.back">Back</button><div class="action-group"><button class="button button-secondary" id="validate-json" data-i18n="actions.validate">Validate JSON</button><button class="button button-primary" id="to-export" disabled><span data-i18n="actions.continueExport">Continue to export</span> <span aria-hidden="true">&#8594;</span></button></div></div>
+    </section>
+
+    <section class="panel" data-panel="export">
+      <div class="panel-heading">
+        <div>
+          <p class="step-kicker" data-i18n="export.kicker">STEP 05 / EXPORT</p>
+          <h2 data-i18n="export.title">Your configuration is ready.</h2>
+          <p data-i18n="export.description">Download the edited application file, keep the raw parser output for inspection, or start another project.</p>
+        </div>
+        <div class="panel-number">05</div>
+      </div>
+      <div class="export-grid">
+        <div class="export-card primary-export"><span class="export-tag" data-i18n="export.applicationOutput">APPLICATION OUTPUT</span><h3>knxConfig.json</h3><p data-i18n="export.applicationDescription">Validated, editable configuration for your KNX application.</p><button class="button button-primary" id="download-config"><span data-i18n="actions.downloadConfiguration">Download configuration</span> <span aria-hidden="true">&#8595;</span></button></div>
+        <div class="export-card"><span class="export-tag" data-i18n="export.parserOutput">PARSER OUTPUT</span><h3>knxConfigTemp.json</h3><p data-i18n="export.parserDescription">Complete raw project data from xknxproject.</p><button class="button button-secondary" id="download-temp"><span data-i18n="actions.downloadRaw">Download raw JSON</span> <span aria-hidden="true">&#8595;</span></button></div>
+      </div>
+      <div class="export-tools"><button class="button button-quiet" id="copy-json" data-i18n="actions.copyJson">Copy final JSON</button><span id="copy-status"></span></div>
+      <div class="panel-actions split"><button class="button button-quiet" data-prev="review" data-i18n="actions.backToEditor">Back to editor</button><button class="button button-primary" data-action="reset"><span data-i18n="actions.newProject">Convert another project</span> <span aria-hidden="true">&#8594;</span></button></div>
+    </section>
+  </main>
+  <footer><span data-i18n="brand.footer">KNX Project to JSON</span><span data-i18n="brand.footerDetail">Local conversion workbench</span></footer>
+  <script src="/app.js"></script>
+</body>
+</html>

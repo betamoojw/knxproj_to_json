@@ -65,7 +65,8 @@ python knxproj_to_json.py myproject.knxproj
 This generates:
 
 ```text
-myproject.json
+knxConfigTemp.json
+knxConfig.json
 ```
 
 ### 3. Generate temporary and application configuration files
@@ -79,6 +80,62 @@ python knxproj_to_json.py myproject.knxproj \
 The `knxConfigTemp.json` file contains the raw data parsed by `xknxproject`.
 The `knxConfig.json` file contains the stable application configuration with
 the mapped `comObjects` array.
+
+## Web Interface
+
+The repository includes a local browser interface for importing, converting,
+reviewing, editing, validating, and downloading KNX configuration files.
+
+Install the backend requirements:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Start the local web service:
+
+```bash
+python web_app.py
+```
+
+Open `http://127.0.0.1:8000` in a browser. The interface keeps uploaded
+projects in isolated temporary directories and uses the same converter as the
+command-line workflow.
+
+The web API provides:
+
+| Endpoint | Purpose |
+| -------- | ------- |
+| `GET /api/health` | Check the backend and parser environment |
+| `GET /api/environment` | Read Python and `xknxproject` versions |
+| `POST /api/convert` | Upload and convert an ETS project |
+| `POST /api/validate` | Validate edited application JSON |
+| `GET /api/result/<id>` | Read a conversion result and summary |
+| `GET /api/download/<id>/config` | Download final `knxConfig.json` |
+| `GET /api/download/<id>/temp` | Download raw `knxConfigTemp.json` |
+
+The frontend follows a guided workflow inspired by the
+[ArduinoJson Assistant](https://arduinojson.org/v7/assistant/): setup,
+import, conversion, review, and export. The final JSON is editable in the
+browser and must pass validation before it can be downloaded.
+
+### Interface Languages
+
+The web interface supports:
+
+- English (`en`)
+- Simplified Chinese (`zh-CN`)
+- Traditional Chinese (`zh-TW`)
+
+Use the language selector in the header to switch languages without reloading.
+The choice is stored in browser `localStorage`; a supported browser language is
+used only when no explicit choice has been saved. Missing translations fall
+back to English. The interface language is independent from the optional ETS
+project language sent to the parser.
+
+Translations are centralized in `web/app.js`. Add a locale catalog using the
+same keys as `translations.en`, then add an option to the `ui-language` select
+in `web/index.html`.
 
 ---
 
