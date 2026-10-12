@@ -68,11 +68,17 @@ This generates:
 myproject.json
 ```
 
-### 3. Specify the output file
+### 3. Generate temporary and application configuration files
 
 ```bash
-python knxproj_to_json.py myproject.knxproj -o knxConfig.json
+python knxproj_to_json.py myproject.knxproj \
+  -t knxConfigTemp.json \
+  -o knxConfig.json
 ```
+
+The `knxConfigTemp.json` file contains the raw data parsed by `xknxproject`.
+The `knxConfig.json` file contains the stable application configuration with
+the mapped `comObjects` array.
 
 ---
 
@@ -188,6 +194,12 @@ output into your application's own stable schema.
      └────────┬────────┘
               │
               ▼
+        knxConfigTemp.json
+              │
+              ▼
+        Application mapper
+              │
+              ▼
         knxConfig.json
               │
        ┌──────┴──────┐
@@ -211,46 +223,53 @@ Benefits include:
 
 ---
 
-## 🛠️ Example Application Schema
+## 🛠️ Application Schema
 
 A simplified transformation can look like this:
 
 ```python
 def create_knx_config(project: dict) -> dict:
     config = {
-        "version": "1.0",
-        "devices": [],
-        "communication_objects": [],
-        "group_addresses": [],
+    "media_type": "knx_ip",
+    "media_parameters": {
+      "multicast_address": "224.0.23.12",
+      "udp_port": 3671,
+      "transport_mode": "routing",
+      "interface_identifier": "KNX-IP-Interface",
+      "nat": False,
+    },
+    "physical_address": "15.15.199",
+    "comObjects": [],
     }
-
-    # Devices
-    for individual_address, device in project.get("devices", {}).items():
-        config["devices"].append({
-            "individual_address": individual_address,
-            "name": device.get("name"),
-            "manufacturer": device.get("manufacturer_name"),
-        })
-
-    # Group addresses
-    for group_address, group_data in project.get(
-        "group_addresses", {}
-    ).items():
-        config["group_addresses"].append({
-            "group_address": group_address,
-            "name": group_data.get("name"),
-            "datapoint_type": group_data.get("dpt"),
-        })
 
     return config
 ```
 
-The resulting configuration can then be serialized:
+Each `comObjects` item contains:
+
+```json
+{
+  "id": "living_room_light_command",
+  "name": "Living Room Light Command",
+  "description": "Command to turn on/off the living room light",
+  "group_address": "1/0/1",
+  "datapoint_type": "DPT-1.001",
+  "readable": false,
+  "writable": true,
+  "unit": null
+}
+```
+
+Communication objects linked to multiple group addresses are emitted as
+separate entries with deterministic group-address-qualified IDs.
+
+The converter writes the raw parser result first, reloads that temporary
+file, and then writes the application configuration:
 
 ```python
 import json
 
-project = XKNXProj("myproject.knxproj").parse()
+project = json.load(open("knxConfigTemp.json", encoding="utf-8"))
 
 config = create_knx_config(project)
 
@@ -274,12 +293,13 @@ project/
 │
 ├── myproject.knxproj
 │
+├── knxConfigTemp.json
 └── knxConfig.json
 ```
 
 The generated `knxConfig.json` is intended to become the application's
-**portable KNX configuration**, rather than an implementation-specific dump
-of the ETS parser.
+**portable KNX configuration**. The intermediate `knxConfigTemp.json` remains
+an implementation-specific dump of the ETS parser.
 
 ---
 
