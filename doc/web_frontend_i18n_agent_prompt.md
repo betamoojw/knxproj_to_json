@@ -15,13 +15,19 @@ Use these existing files as the implementation source of truth:
 
 Add runtime language switching to the web frontend without changing the JSON conversion schema or the existing backend conversion behavior.
 
-The interface must support at minimum:
+The interface must support all of these languages:
 
-- English
-- Simplified Chinese (`zh-CN`)
-- Traditional Chinese (`zh-TW`)
+| Native name | Locale code |
+|---|---|
+| English | `en` |
+| Deutsch | `de` |
+| Español | `es` |
+| Français | `fr` |
+| Polski | `pl` |
+| 简体中文 | `zh-CN` |
+| 繁體中文 | `zh-TW` |
 
-Design the localization system so additional languages can be added without rewriting the UI logic. Add at least one clearly documented extension point for future locales such as German, French, Spanish, or Japanese.
+Design the localization system so more languages can be added without rewriting the UI logic. English is the canonical catalog and fallback locale.
 
 ## Required Behavior
 
@@ -95,6 +101,8 @@ const translations = {
 };
 ```
 
+The production catalog must contain complete dictionaries for `en`, `de`, `es`, `fr`, `pl`, `zh-CN`, and `zh-TW`. The abbreviated example above does not reduce that requirement.
+
 Use stable translation keys and a `t(key, variables)` helper. Missing translations must fall back to English rather than displaying undefined keys.
 
 Use interpolation for dynamic messages instead of concatenating translated fragments, for example:
@@ -110,6 +118,10 @@ The interpolation system must safely escape values before inserting them into HT
 Provide language options with native names:
 
 - English
+- Deutsch
+- Español
+- Français
+- Polski
 - 简体中文
 - 繁體中文
 
@@ -162,11 +174,13 @@ The localization pass must update:
 
 Do not use visible flag icons as the only language indicator. Use native language names in the selector.
 
-## Chinese Typography and Layout
+## Multilingual Typography and Layout
 
-Ensure Simplified and Traditional Chinese render correctly on Windows and common browsers.
+Ensure all seven locales render correctly on Windows and common browsers.
 
 - Use a font stack with CJK-capable fallbacks.
+- Preserve accented Spanish, French, German, and Polish characters correctly.
+- Allow longer German, French, Spanish, and Polish labels to wrap without clipping.
 - Do not assume Latin word spacing.
 - Allow Chinese headings and button labels to wrap naturally.
 - Ensure translated labels do not overflow buttons, cards, or the stepper.
@@ -210,19 +224,25 @@ Maintain compatibility with existing plain-string error responses while adding s
 Add focused tests for:
 
 1. English is the default fallback.
-2. Simplified Chinese translations are available.
-3. Traditional Chinese translations are available.
+2. Every locale contains the same translation keys as English.
+3. English, German, Spanish, French, Polish, Simplified Chinese, and Traditional Chinese translations are available.
 4. Missing translation keys fall back to English.
 5. Language selection persists in `localStorage`.
-6. Browser locale detection does not override an explicit saved selection.
-7. Switching languages updates visible text without reloading.
-8. Dynamic summary and error messages interpolate safely.
-9. User-provided names and descriptions are not translated or treated as HTML.
-10. JSON property names and values remain unchanged after language switching.
-11. Long Chinese labels do not overflow the stepper or primary buttons.
-12. Backend conversion and validation behavior remains unchanged.
+6. Browser locale detection selects the closest supported locale.
+7. Unsupported browser locales fall back to English.
+8. Browser locale detection does not override an explicit saved selection.
+9. Switching languages updates visible text without reloading.
+10. The document `<html lang>` attribute follows the selected locale.
+11. Dynamic summary and error messages interpolate safely.
+12. User-provided names and descriptions are not translated or treated as HTML.
+13. JSON property names and values remain unchanged after language switching.
+14. Switching UI language does not change the ETS project-language field.
+15. Download filenames remain `knxConfig.json` and `knxConfigTemp.json`.
+16. Long German and Polish labels do not overflow controls.
+17. Simplified and Traditional Chinese text does not overflow the stepper or primary buttons.
+18. Backend conversion and validation behavior remains unchanged.
 
-Use browser tests where available. At minimum verify each locale at desktop and mobile widths.
+Use browser tests where available. Verify all seven locales at desktop and mobile widths, with screenshot checks for at least German, Polish, Simplified Chinese, and Traditional Chinese.
 
 ## README Updates
 
@@ -239,13 +259,13 @@ Update `README.md` with:
 
 The work is complete when:
 
-- English, Simplified Chinese, and Traditional Chinese are selectable in the UI.
+- English, Deutsch, Español, Français, Polski, 简体中文, and 繁體中文 are selectable in the UI.
 - The language changes without a page reload.
 - The selected language persists across reloads.
 - Every visible UI string has a translation key.
 - Accessibility labels and placeholders are translated.
 - Missing translations fall back to English.
-- Chinese text is readable and does not cause layout overflow on desktop or mobile.
+- All seven locales are readable and do not cause layout overflow on desktop or mobile.
 - User-generated JSON content remains unchanged.
 - Conversion, validation, raw output, final output, and downloads still work.
 - Existing backend tests pass.

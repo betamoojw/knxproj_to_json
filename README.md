@@ -124,6 +124,10 @@ browser and must pass validation before it can be downloaded.
 The web interface supports:
 
 - English (`en`)
+- Deutsch (`de`)
+- Español (`es`)
+- Français (`fr`)
+- Polski (`pl`)
 - Simplified Chinese (`zh-CN`)
 - Traditional Chinese (`zh-TW`)
 
@@ -133,9 +137,20 @@ used only when no explicit choice has been saved. Missing translations fall
 back to English. The interface language is independent from the optional ETS
 project language sent to the parser.
 
+Browser-language detection maps German, Spanish, French, Polish, and Chinese
+locales to the closest supported interface language. Unsupported browser
+languages use English. Changing the interface language never alters generated
+JSON, download filenames, or the selected ETS project parsing language.
+
 Translations are centralized in `web/app.js`. Add a locale catalog using the
 same keys as `translations.en`, then add an option to the `ui-language` select
 in `web/index.html`.
+
+Run the localization and backend tests with:
+
+```bash
+python -m unittest discover -s test -p "test_*.py" -v
+```
 
 ---
 
